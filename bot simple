@@ -1,0 +1,69 @@
+import discord
+from discord.ext import commands
+import random
+import asyncio
+
+# Intents
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+
+# Crear bot
+bot = commands.Bot(command_prefix='$', intents=intents)
+
+# Evento cuando el bot inicia
+@bot.event
+async def on_ready():
+    print(f'We have logged in as {bot.user}')
+
+# Evento cuando entra un miembro
+@bot.event
+async def on_member_join(member):
+    guild = member.guild
+
+    if guild.system_channel is not None:
+        mensaje = f'¡Bienvenido {member.mention} a {guild.name}!'
+        await guild.system_channel.send(mensaje)
+
+# Comando hello
+@bot.command()
+async def hello(ctx):
+    await ctx.send(f'Hola, soy un bot {bot.user}!')
+
+# Comando heh
+@bot.command()
+async def heh(ctx, count_heh: int = 5):
+    await ctx.send("he" * count_heh)
+
+@bot.command()
+async def guess(ctx):
+    await ctx.send(" Adivina un número del 1 al 10.")
+
+    def check(message):
+        return (
+            message.author == ctx.author
+            and message.channel == ctx.channel
+            and message.content.isdigit()
+        )
+
+    answer = random.randint(1, 10)
+
+    try:
+        guess = await bot.wait_for(
+            "message",
+            check=check,
+            timeout=5.0
+        )
+
+    except asyncio.TimeoutError:
+        await ctx.send(
+            f" Tardaste demasiado. El número era {answer}."
+        )
+        return
+
+    if int(guess.content) == answer:
+        await ctx.send("¡Correcto!")
+    else:
+        await ctx.send(f"Incorrecto. El número era {answer}.")
+# Ejecutar bot
+bot.run("")
